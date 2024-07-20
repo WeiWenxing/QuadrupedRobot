@@ -4,7 +4,8 @@ import threading
 import time
 
 import numpy as np
-from PIL import Image
+import netifaces as ni
+from PIL import Image, ImageDraw, ImageFont
 from multiprocessing import Process
 import multiprocessing
 
@@ -33,6 +34,22 @@ if hw_version == 'P1\n':
     disp = ST7789(14, 15, 47)
 else :
     disp = ST7789(27, 24, 26)
+
+def show_ip(disp):
+    image_path = cartoons_folder + "ip.png"
+    image = Image.open(image_path)
+    image.resize((320, 240))
+    if ni.AF_INET in ni.ifaddresses('wlan0').keys():
+        ip = ni.ifaddresses('wlan0')[ni.AF_INET][0]['addr']
+    elif ni.AF_INET in ni.ifaddresses('eth0').keys():
+        ip = ni.ifaddresses('eth0')[ni.AF_INET][0]['addr']
+    else:
+        ip = 'no IPv4 address found'
+    font = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', 30)
+    draw = ImageDraw.Draw(image)
+    text = "IP: %s" % str(ip)
+    draw.text((20, 95), text, font=font, fill="#000000", spacing=0, align='left')
+    disp.display(image)
 
 def pic_show(disp, pic_name, _lock):
     """ Show the specify picture
@@ -113,9 +130,10 @@ def main():
     global disp
     disp.begin()
     disp.clear()
-    image=Image.open(cartoons_folder + "logo.png")
-    image.resize((320,240))
-    disp.display(image)
+    #image=Image.open(cartoons_folder + "logo.png")
+    #image.resize((320,240))
+    #disp.display(image)
+    show_ip(disp)
     
     shutdown_counter = 0            # counter for shuudown cmd
     
